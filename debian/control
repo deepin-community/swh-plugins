@@ -1,0 +1,45 @@
+Source: swh-plugins
+Section: sound
+Priority: optional
+Maintainer: Debian Multimedia Maintainers <pkg-multimedia-maintainers@lists.alioth.debian.org>
+Uploaders:
+ Alessio Treglia <alessio@debian.org>,
+ Jaromír Mikeš <mira.mikes@seznam.cz>
+Build-Depends:
+ chrpath,
+ debhelper (>= 10~),
+ dh-autoreconf,
+ ladspa-sdk,
+ libfftw3-dev,
+ libtool,
+ libxml2-utils,
+ libxml-parser-perl,
+ libgsm1-dev,
+ pkg-config
+Standards-Version: 3.9.8
+Homepage: http://plugin.org.uk/
+Vcs-Git: https://anonscm.debian.org/git/pkg-multimedia/swh-plugins.git
+Vcs-Browser: https://anonscm.debian.org/cgit/pkg-multimedia/swh-plugins.git
+
+Package: swh-plugins
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends}
+Replaces:
+ vocoder-ladspa (<< 1.1.3-3~),
+ ${cdbs:Replaces}
+Breaks:
+ vocoder-ladspa (<< 1.1.3-3~)
+Provides:
+ ladspa-plugin
+Description: Steve Harris's LADSPA plugins
+ Steve Harris has written a large number of plugins for LADSPA
+ compatible hosts (e.g. GLAME, Sweep and ecasound). The plugins
+ available are:
+ .
+ amp, fast overdrive, overdrive (with colourisation), comb filter,
+ waveshaper, ringmod, divider, diode, decliper, pitch scaler,
+ 16 band equaliser, sinus wavewrapper, hermes filter, chorus,
+ flanger, decimater, oscillator, gverb, phasers, harmonic generators,
+ surround encoders and more.

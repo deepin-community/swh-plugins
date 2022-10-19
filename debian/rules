@@ -1,0 +1,68 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+
+upstream_version ?= $(shell dpkg-parsechangelog | sed -rne 's/^Version: ([0-9.]+)(\+dfsg\d+)?.*$$/\1/p')
+git_date= $(shell date +%Y%m%d)
+dfsg_version = $(upstream_version)+git$(git_date)~repack1
+pkg = $(shell dpkg-parsechangelog | sed -ne 's/^Source: //p')
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+DEB_HOST_MULTIARCH	?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_HOST_GNU_TYPE	?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE	?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_BUILD_ARCH		?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+
+ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -g
+endif
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
+
+EXTRAFLAGS :=
+ifeq ($(DEB_BUILD_ARCH),amd64)
+	EXTRAFLAGS := --enable-sse
+endif
+
+%:
+	dh $@ --with autoreconf
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-shared \
+		--disable-rpath $(EXTRAFLAGS)
+
+override_dh_auto_clean:
+	rm -f conftest conftest.c
+	rm -f po/stamp-po
+	dh_auto_clean
+
+override_dh_auto_install:
+	dh_auto_install
+	mkdir debian/swh-plugins/usr/lib/ladspa
+	mv debian/swh-plugins/usr/lib/*/ladspa/* debian/swh-plugins/usr/lib/ladspa
+	rm -R debian/swh-plugins/usr/lib/$(DEB_HOST_MULTIARCH)
+	# Remove rpaths.
+	chrpath -d -k debian/swh-plugins/usr/lib/ladspa/pitch_scale_1193.so
+	chrpath -d -k debian/swh-plugins/usr/lib/ladspa/pitch_scale_1194.so
+	chrpath -d -k debian/swh-plugins/usr/lib/ladspa/mbeq_1197.so
+	chrpath -d -k debian/swh-plugins/usr/lib/ladspa/imp_1199.so
+
+override_dh_installchangelogs:
+	dh_installchangelogs ChangeLog
+
+# get-orig-source to drop upstream .gitignore file
+get-orig-source:
+	git  clone  git://github.com/swh/ladspa swh-plugins
+	rm -fR $(pkg)/.git
+	rm -fR $(pkg)/.gitignore
+	rm -fR $(pkg)/gsm
+	tar cf $(pkg)_$(dfsg_version).orig.tar $(pkg)
+	xz -zf $(pkg)_$(dfsg_version).orig.tar
+	rm -rf $(pkg)
+	mv $(pkg)_$(dfsg_version).orig.tar.xz ../$(pkg)_$(dfsg_version).orig.tar.xz

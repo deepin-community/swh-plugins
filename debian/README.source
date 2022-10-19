@@ -1,0 +1,5 @@
+The originall tarball was repacked to remove the ./gsm/ directory,
+which provides stuff already available for Debian.
+
+To retrieve an updated upstream's tarball you can run:
+$ debian/rules get-orig-source
